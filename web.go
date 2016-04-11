@@ -1,5 +1,7 @@
 package main
 
+/*
+
 import (
 	"fmt"
 	"net/http"
@@ -20,3 +22,4 @@ func main() {
 func hello(res http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(res, "hello, world from %s", runtime.Version())
 }
+*/
