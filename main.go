@@ -214,9 +214,11 @@ func makeHandler(githubsecret string, out chan string, quit chan struct{}) func(
 
 func startHookMsgSrc(out chan string, quit chan struct{}) {
 	githubsecret := os.Getenv("GITHUB_SECRET")
+	log.Println("making handler")
 	handlehook := makeHandler(githubsecret, out, quit)
 
 	globaldone.Add(1)
+	log.Println("starting http goroutine")
 	go func() {
 		defer globaldone.Done()
 		bindto := fmt.Sprintf("%s:%s", os.Getenv("OPENSHIFT_GO_IP"), os.Getenv("OPENSHIFT_GO_PORT"))
@@ -283,10 +285,9 @@ func main() {
 	if doserve {
 		log.Println("Starting http")
 		startHookMsgSrc(msgchan, nil)
-	} else {
-		log.Println("Waiting")
-		globaldone.Wait()
 	}
+	log.Println("Waiting")
+	globaldone.Wait()
 }
 
 /*
