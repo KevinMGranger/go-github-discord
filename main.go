@@ -125,21 +125,21 @@ func formatEvent(w http.ResponseWriter, evt string, pload []byte) (str string) {
 
 		switch *issue.Action {
 		case "opened":
-			str = fmt.Sprintf("%s opened Issue %s", *issue.Sender.Login, *issue.Issue.Number)
+			str = fmt.Sprintf("%s opened Issue %v", *issue.Sender.Login, *issue.Issue.Number)
 			if issue.Assignee != nil {
 				str = fmt.Sprintf("%s, assigned to %s", str, *issue.Assignee.Login)
 			}
 			str = fmt.Sprintf("%s (%s)", str, *issue.Issue.HTMLURL)
 		case "closed":
-			str = fmt.Sprintf("%s closed Issue %s (%s)", *issue.Sender.Login, *issue.Issue.Number, *issue.Issue.HTMLURL)
+			str = fmt.Sprintf("%s closed Issue %v (%s)", *issue.Sender.Login, *issue.Issue.Number, *issue.Issue.HTMLURL)
 		case "assigned":
 			asnee := *issue.Assignee.Login
-			str = fmt.Sprintf("%s assigned Issue %s to %s (%s)", *issue.Sender.Login, *issue.Issue.Number, asnee, *issue.Issue.HTMLURL)
+			str = fmt.Sprintf("%s assigned Issue %v to %s (%s)", *issue.Sender.Login, *issue.Issue.Number, asnee, *issue.Issue.HTMLURL)
 		case "unassigned":
 			asnee := *issue.Assignee.Login
-			str = fmt.Sprintf("%s unassigned Issue %s to %s (%s)", *issue.Sender.Login, *issue.Issue.Number, asnee, *issue.Issue.HTMLURL)
+			str = fmt.Sprintf("%s unassigned Issue %v to %s (%s)", *issue.Sender.Login, *issue.Issue.Number, asnee, *issue.Issue.HTMLURL)
 		case "reopened":
-			str = fmt.Sprintf("%s reopened Issue %s", *issue.Sender.Login, *issue.Issue.Number)
+			str = fmt.Sprintf("%s reopened Issue %v", *issue.Sender.Login, *issue.Issue.Number)
 			str = fmt.Sprintf("%s (%s)", str, *issue.Issue.HTMLURL)
 		}
 	case "pull_request":
@@ -165,7 +165,7 @@ func formatEvent(w http.ResponseWriter, evt string, pload []byte) (str string) {
 		if action == "" {
 			return
 		}
-		str = fmt.Sprintf("%s %s PR %s (%s)", *pr.Sender.Login, action, *pr.Number, *pr.PullRequest.HTMLURL)
+		str = fmt.Sprintf("%s %s PR %v (%s)", *pr.Sender.Login, action, *pr.Number, *pr.PullRequest.HTMLURL)
 	default:
 		w.WriteHeader(http.StatusNoContent)
 		return
