@@ -203,6 +203,8 @@ func makeHandler(githubsecret string, out chan string, quit chan struct{}) func(
 			return
 		}
 
+		log.Println("payload:")
+		log.Println(pload)
 		str := formatEvent(w, evt, pload)
 
 		if str != "" {
