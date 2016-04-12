@@ -105,9 +105,9 @@ func formatEvent(w http.ResponseWriter, evt string, pload []byte) (str string) {
 		}
 
 		if *pushevent.Forced {
-			str = fmt.Sprintf("%s FORCE pushed to %s", pushevent.Sender.Name, pushevent.Ref)
+			str = fmt.Sprintf("%s FORCE pushed to %s", *pushevent.Sender.Login, *pushevent.Ref)
 		} else {
-			str = fmt.Sprintf("%s pushed to %s", pushevent.Sender.Name, pushevent.Ref)
+			str = fmt.Sprintf("%s pushed to %s", *pushevent.Sender.Login, *pushevent.Ref)
 		}
 	case "delete":
 		delete := github.DeleteEvent{}
@@ -115,7 +115,7 @@ func formatEvent(w http.ResponseWriter, evt string, pload []byte) (str string) {
 			http.Error(w, "malformed", http.StatusBadRequest)
 			return
 		}
-		str = fmt.Sprintf("%s deleted %s", delete.Sender.Name, delete.Ref)
+		str = fmt.Sprintf("%s deleted %s", *delete.Sender.Login, *delete.Ref)
 	case "issues":
 		issue := github.IssuesEvent{}
 		if err = json.Unmarshal(pload, &issue); err != nil {
@@ -125,22 +125,22 @@ func formatEvent(w http.ResponseWriter, evt string, pload []byte) (str string) {
 
 		switch *issue.Action {
 		case "opened":
-			str = fmt.Sprintf("%s opened Issue %s", issue.Sender.Name, issue.Issue.Number)
+			str = fmt.Sprintf("%s opened Issue %s", *issue.Sender.Login, *issue.Issue.Number)
 			if issue.Assignee != nil {
-				str = fmt.Sprintf("%s, assigned to %s", str, issue.Assignee.Name)
+				str = fmt.Sprintf("%s, assigned to %s", str, *issue.Assignee.Login)
 			}
-			str = fmt.Sprintf("%s (%s)", str, issue.Issue.HTMLURL)
+			str = fmt.Sprintf("%s (%s)", str, *issue.Issue.HTMLURL)
 		case "closed":
-			str = fmt.Sprintf("%s closed Issue %s (%s)", issue.Sender.Name, issue.Issue.Number, issue.Issue.HTMLURL)
+			str = fmt.Sprintf("%s closed Issue %s (%s)", *issue.Sender.Login, *issue.Issue.Number, *issue.Issue.HTMLURL)
 		case "assigned":
-			asnee := issue.Assignee.Name
-			str = fmt.Sprintf("%s assigned Issue %s to %s (%s)", issue.Sender.Name, issue.Issue.Number, asnee, issue.Issue.HTMLURL)
+			asnee := *issue.Assignee.Login
+			str = fmt.Sprintf("%s assigned Issue %s to %s (%s)", *issue.Sender.Login, *issue.Issue.Number, asnee, *issue.Issue.HTMLURL)
 		case "unassigned":
-			asnee := issue.Assignee.Name
-			str = fmt.Sprintf("%s unassigned Issue %s to %s (%s)", issue.Sender.Name, issue.Issue.Number, asnee, issue.Issue.HTMLURL)
+			asnee := *issue.Assignee.Login
+			str = fmt.Sprintf("%s unassigned Issue %s to %s (%s)", *issue.Sender.Login, *issue.Issue.Number, asnee, *issue.Issue.HTMLURL)
 		case "reopened":
-			str = fmt.Sprintf("%s reopened Issue %s", issue.Sender.Name, issue.Issue.Number)
-			str = fmt.Sprintf("%s (%s)", str, issue.Issue.HTMLURL)
+			str = fmt.Sprintf("%s reopened Issue %s", *issue.Sender.Login, *issue.Issue.Number)
+			str = fmt.Sprintf("%s (%s)", str, *issue.Issue.HTMLURL)
 		}
 	case "pull_request":
 		pr := github.PullRequestEvent{}
@@ -165,7 +165,7 @@ func formatEvent(w http.ResponseWriter, evt string, pload []byte) (str string) {
 		if action == "" {
 			return
 		}
-		str = fmt.Sprintf("%s %s PR %s (%s)", pr.Sender.Name, action, pr.Number, pr.PullRequest.HTMLURL)
+		str = fmt.Sprintf("%s %s PR %s (%s)", *pr.Sender.Login, action, *pr.Number, *pr.PullRequest.HTMLURL)
 	default:
 		w.WriteHeader(http.StatusNoContent)
 		return
@@ -205,6 +205,12 @@ func makeHandler(githubsecret string, out chan string, quit chan struct{}) func(
 
 		log.Println("payload:")
 		log.Println(string(pload))
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Panic during formatting: %v", r)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+		}()
 		str := formatEvent(w, evt, pload)
 
 		if str != "" {
