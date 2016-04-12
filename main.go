@@ -67,7 +67,7 @@ func startFifoMsgSrc(out chan string, quit chan struct{}) {
 	globaldone.Add(1)
 	go func() {
 		for {
-			in, err := os.Open("in")
+			in, err := os.Open(osdatadir + "/in")
 			if err != nil {
 				panic(err)
 			}
