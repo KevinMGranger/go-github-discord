@@ -94,6 +94,7 @@ func startFifoMsgSrc(out chan string, quit chan struct{}) {
 }
 
 func formatEvent(w http.ResponseWriter, evt string, pload []byte) (str string) {
+	defer log.Printf("Sending gh message %s", str)
 	var err error
 	switch evt {
 	case "push":
