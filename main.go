@@ -66,23 +66,29 @@ func startFifoMsgSrc(out chan string, quit chan struct{}) {
 
 	globaldone.Add(1)
 	go func() {
-		in, err := os.Open("./in")
-		if err != nil {
-			panic(err)
-		}
-		defer globaldone.Done()
-		defer in.Close()
-
-		inbuf := bufio.NewReader(in)
-
 		for {
-			line, err := inbuf.ReadString('\n')
-			if err != nil && err != io.EOF {
-				log.Println("FIFO read error:", err.Error())
-				return
+			in, err := os.Open("in")
+			if err != nil {
+				panic(err)
 			}
+			defer globaldone.Done()
+			defer in.Close()
 
-			out <- line
+			inbuf := bufio.NewReader(in)
+
+		readloop:
+			for {
+				line, err := inbuf.ReadString('\n')
+				if err != nil {
+					if err != io.EOF {
+						log.Println("FIFO read error:", err.Error())
+						return
+					}
+					break readloop
+				}
+
+				out <- line
+			}
 		}
 	}()
 }
@@ -229,8 +235,11 @@ func msgloop(sess *discord.Session, me *discord.User, msgchan chan string, quit 
 		case <-quit:
 			return
 		case msg := <-msgchan:
+			log.Println(msg)
 			_, err := sess.ChannelMessageSend(channel, msg)
-			log.Println("Error sending message %s: %s", msg, err.Error())
+			if err != nil {
+				log.Println("Error sending message %s: %s", msg, err.Error())
+			}
 		}
 	}
 }
@@ -267,11 +276,14 @@ func init() {
 func main() {
 	msgchan := startMsgSink(os.Getenv("BOT_TOKEN"))
 
+	log.Println("Starting fifo msg src")
 	startFifoMsgSrc(msgchan, nil)
 
 	if doserve {
+		log.Println("Starting http")
 		startHookMsgSrc(msgchan, nil)
 	} else {
+		log.Println("Waiting")
 		globaldone.Wait()
 	}
 }
