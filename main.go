@@ -204,7 +204,7 @@ func makeHandler(githubsecret string, out chan string, quit chan struct{}) func(
 		}
 
 		log.Println("payload:")
-		log.Println(pload)
+		log.Println(string(pload))
 		str := formatEvent(w, evt, pload)
 
 		if str != "" {
